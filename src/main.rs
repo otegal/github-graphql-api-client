@@ -90,8 +90,26 @@ async fn main() -> anyhow::Result<()> {
 
     let client = client(&token, &github_user_name);
 
-    dbg!(fetch_repo_view(&client).await?);
-    dbg!(fetch_viewer(&client).await?);
+    let viewer_data: viewer::ResponseData = fetch_viewer(&client)
+        .await?
+        .data
+        .expect("missing response data");
+    println!("{:?}", &viewer_data.viewer);
+    println!("{:?}", &viewer_data.viewer.login);
+
+    let repo_data: repo_view::ResponseData = fetch_repo_view(&client)
+        .await?
+        .data
+        .expect("missing response data");
+    println!("{:?}", &repo_data.repository);
+    println!(
+        "{:?}",
+        &repo_data
+            .repository
+            .expect("missing repository")
+            .issues
+            .nodes
+    );
 
     Ok(())
 }
