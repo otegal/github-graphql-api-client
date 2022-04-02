@@ -22,3 +22,9 @@ query RepoView($owner: String!, $name: String!) {
     }
   }
 }
+
+query Viewer {
+  viewer {
+    login
+  }
+}

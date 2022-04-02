@@ -15,6 +15,14 @@ type URI = String;
 )]
 struct RepoView;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "schema.docs.graphql",
+    query_path  = "query.graphql",
+    response_derives = "Debug"
+)]
+struct Viewer;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv().ok();
@@ -37,11 +45,9 @@ async fn main() -> anyhow::Result<()> {
     //
     // println!("{:?}", res.text().await?);
 
-    let variables = repo_view::Variables{
-        owner: "otegal".into(),
-        name:  "github-graphql-api-client".into(),
-    };
     let client = Client::builder()
+        // User-Agentに指定の値を入れない場合403が返ってくる
+        // cf. https://docs.github.com/ja/rest/overview/resources-in-the-rest-api#user-agent-required
         .user_agent(github_user_name)
         .default_headers(
             std::iter::once((
@@ -52,7 +58,14 @@ async fn main() -> anyhow::Result<()> {
         )
         .build()?;
 
-    let res = post_graphql::<RepoView, _>(&client, "https://api.github.com/graphql", variables).await?;
+    // let variables = repo_view::Variables{
+    //     owner: "otegal".into(),
+    //     name:  "github-graphql-api-client".into(),
+    // };
+    // let res = post_graphql::<RepoView, _>(&client, "https://api.github.com/graphql", variables).await?;
+
+    let res = post_graphql::<Viewer, _>(&client, "https://api.github.com/graphql", viewer::Variables{}).await?;
+
     println!("{:?}", res);
     Ok(())
 }
