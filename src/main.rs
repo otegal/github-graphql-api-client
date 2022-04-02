@@ -1,8 +1,9 @@
 use dotenv::dotenv;
-use std::env;
-use graphql_client::GraphQLQuery;
 use graphql_client::reqwest::post_graphql;
+use graphql_client::GraphQLQuery;
+use graphql_client::Response;
 use reqwest::Client;
+use std::env;
 
 #[allow(clippy::upper_case_acronyms)]
 type URI = String;
@@ -18,7 +19,7 @@ struct RepoView;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "schema.docs.graphql",
-    query_path  = "query.graphql",
+    query_path = "query.graphql",
     response_derives = "Debug"
 )]
 struct Viewer;
@@ -52,20 +53,35 @@ async fn main() -> anyhow::Result<()> {
         .default_headers(
             std::iter::once((
                 reqwest::header::AUTHORIZATION,
-                reqwest::header::HeaderValue::from_str(&format!("bearer {}", token))?
+                reqwest::header::HeaderValue::from_str(&format!("bearer {}", token))?,
             ))
             .collect(),
         )
         .build()?;
 
-    // let variables = repo_view::Variables{
-    //     owner: "otegal".into(),
-    //     name:  "github-graphql-api-client".into(),
-    // };
-    // let res = post_graphql::<RepoView, _>(&client, "https://api.github.com/graphql", variables).await?;
+    dbg!(fetch_repo_view(&client).await?);
+    dbg!(fetch_viewer(&client).await?);
 
-    let res = post_graphql::<Viewer, _>(&client, "https://api.github.com/graphql", viewer::Variables{}).await?;
-
-    println!("{:?}", res);
     Ok(())
+}
+
+async fn fetch_repo_view(
+    client: &Client,
+) -> anyhow::Result<Response<repo_view::ResponseData>, reqwest::Error> {
+    let variables = repo_view::Variables {
+        owner: "otegal".into(),
+        name: "github-graphql-api-client".into(),
+    };
+    post_graphql::<RepoView, _>(&client, "https://api.github.com/graphql", variables).await
+}
+
+async fn fetch_viewer(
+    client: &Client,
+) -> anyhow::Result<Response<viewer::ResponseData>, reqwest::Error> {
+    post_graphql::<Viewer, _>(
+        &client,
+        "https://api.github.com/graphql",
+        viewer::Variables {},
+    )
+    .await
 }
