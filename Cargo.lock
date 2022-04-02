@@ -267,7 +267,6 @@ dependencies = [
  "graphql_client",
  "reqwest",
  "serde",
- "serde_json",
  "tokio",
 ]
 

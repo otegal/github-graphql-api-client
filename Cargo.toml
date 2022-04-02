@@ -10,6 +10,5 @@ tokio = { version = "*", features = ["full"] }
 anyhow = "*"
 reqwest = { version = "*", features = ["json"] }
 serde = { version = "*", features = ["derive"] }
-serde_json = "*"
 dotenv = "*"
 graphql_client = { version = "*", features = ["reqwest-blocking"] }
