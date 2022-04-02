@@ -61,27 +61,32 @@ async fn fetch_viewer(
     .await
 }
 
+async fn sample_api_call(token: &String, github_user_name: &String) -> anyhow::Result<()> {
+    // 簡易的にRaw string literalを利用してクエリを組む
+    let query = r#"{ "query": "query { viewer { login }}" }"#;
+
+    let client = Client::new();
+    let res = client
+        .post("https://api.github.com/graphql")
+        .header("Authorization", format!("bearer {}", token))
+        // User-Agentに指定の値を入れない場合403が返ってくる
+        // cf. https://docs.github.com/ja/rest/overview/resources-in-the-rest-api#user-agent-required
+        .header("User-Agent", github_user_name)
+        .body(query) // JSON形式も文字列でpostするのでjson()ではなく、body()を利用利用する
+        .send()
+        .await?;
+
+    println!("{:?}", res.text().await?);
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv().ok();
     let token = env::var("GITHUB_ACCESS_TOKEN")?;
     let github_user_name = env::var("GITHUB_USER_NAME")?;
 
-    // // 一旦Raw string literalを利用してクエリを組む
-    // let query = r#"{ "query": "query { viewer { login }}" }"#;
-    //
-    // let client = reqwest::Client::new();
-    // let res = client
-    //     .post("https://api.github.com/graphql")
-    //     .header("Authorization", format!("bearer {}", token))
-    //     // User-Agentに指定の値を入れない場合403が返ってくる
-    //     // cf. https://docs.github.com/ja/rest/overview/resources-in-the-rest-api#user-agent-required
-    //     .header("User-Agent", github_user_name)
-    //     .body(query)
-    //     .send()
-    //     .await?;
-    //
-    // println!("{:?}", res.text().await?);
+    sample_api_call(&token, &github_user_name).await?;
 
     let client = client(&token, &github_user_name);
 
